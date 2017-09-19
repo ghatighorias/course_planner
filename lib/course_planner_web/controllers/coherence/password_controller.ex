@@ -58,8 +58,7 @@ defmodule CoursePlannerWeb.Coherence.PasswordController do
       user ->
         token = random_string 48
         url = router_helpers().password_url(conn, :edit, token)
-        log_input = "reset email url: #{inspect url}"
-        Logger.debug(log_input)
+        Logger.debug(fn -> "reset email url: #{inspect url}" end)
         dt = Ecto.DateTime.utc
         cs = Helpers.changeset(:password, user_schema, user,
           %{reset_password_token: token, reset_password_sent_at: dt})
