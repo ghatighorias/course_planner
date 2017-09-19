@@ -14,9 +14,7 @@ defmodule CoursePlannerWeb.Coherence.SessionController do
 
   # alias Coherence.{Rememberable}
   alias Coherence.ControllerHelpers, as: Helpers
-  alias Coherence.{
-    ConfirmableService, Messages, Schemas, RememberableServer, Coherence.Authentication.Utils
-  }
+  alias Coherence.{ConfirmableService, Messages, Schemas, RememberableServer, Authentication.Utils}
 
   require Logger
 
