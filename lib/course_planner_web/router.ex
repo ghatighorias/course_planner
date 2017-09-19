@@ -29,14 +29,9 @@ defmodule CoursePlannerWeb.Router do
     plug Coherence.Authentication.Session, protected: &JsonLogin.callback/1
   end
 
-  scope "/" do
+  scope "/", CoursePlannerWeb do
     pipe_through :browser
     coherence_routes()
-  end
-
-  scope "/" do
-    pipe_through :protected
-    coherence_routes :protected
   end
 
   scope "/", CoursePlannerWeb do
@@ -47,6 +42,7 @@ defmodule CoursePlannerWeb.Router do
 
   scope "/", CoursePlannerWeb do
     pipe_through :protected
+    coherence_routes :protected
 
     get "/", PageController, :index
 
