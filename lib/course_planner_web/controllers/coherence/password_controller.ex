@@ -58,7 +58,8 @@ defmodule CoursePlannerWeb.Coherence.PasswordController do
       user ->
         token = random_string 48
         url = router_helpers().password_url(conn, :edit, token)
-        Logger.debug "reset email url: #{inspect url}"
+        log_input = "reset email url: #{inspect url}"
+        Logger.debug(log_input)
         dt = Ecto.DateTime.utc
         cs = Helpers.changeset(:password, user_schema, user,
           %{reset_password_token: token, reset_password_sent_at: dt})
@@ -66,11 +67,15 @@ defmodule CoursePlannerWeb.Coherence.PasswordController do
 
         if Config.mailer?() do
           send_user_email :password, user, url
-          put_flash(conn, :info, Messages.backend().reset_email_sent())
+
+          conn
+          |> put_flash(:info, Messages.backend().reset_email_sent())
+          |> redirect_to(:password_create, params)
         else
-          put_flash(conn, :error, Messages.backend().mailer_required())
+          conn
+          |> put_flash(:error, Messages.backend().mailer_required())
+          |> redirect_to(:password_create, params)
         end
-        |> redirect_to(:password_create, params)
     end
   end
 

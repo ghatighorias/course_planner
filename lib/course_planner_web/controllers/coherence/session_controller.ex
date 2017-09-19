@@ -14,7 +14,9 @@ defmodule CoursePlannerWeb.Coherence.SessionController do
 
   # alias Coherence.{Rememberable}
   alias Coherence.ControllerHelpers, as: Helpers
-  alias Coherence.{ConfirmableService, Messages, Schemas}
+  alias Coherence.{
+    ConfirmableService, Messages, Schemas, RememberableServer, Coherence.Authentication.Utils
+  }
 
   require Logger
 
@@ -222,7 +224,7 @@ defmodule CoursePlannerWeb.Coherence.SessionController do
   """
   @spec rememberable_callback(conn, integer, String.t, String.t, Keyword.t) :: conn
   def rememberable_callback(conn, id, series, token, opts) do
-    Coherence.RememberableServer.callback fn ->
+    RememberableServer.callback fn ->
       do_rememberable_callback(conn, id, series, token, opts)
     end
   end
@@ -255,9 +257,9 @@ defmodule CoursePlannerWeb.Coherence.SessionController do
     do: {:error, :not_found}
   defp do_valid_login(user, conn, params, opts) do
     [id, rememberable, series, token] = params
-    cred_store = Coherence.Authentication.Utils.get_credential_store()
+    cred_store = Utils.get_credential_store()
     if Config.async_rememberable?() and Enum.any?(conn.req_headers,
-      fn {k,v} -> k == "x-requested-with" and v == "XMLHttpRequest" end) do
+      fn {k, v} -> k == "x-requested-with" and v == "XMLHttpRequest" end) do
       # for ajax requests, we don't update the sequence number, ensuring that
       # multiple concurrent ajax requests don't fail on the seq_no
       {assign(conn, :remembered, true), user}
@@ -267,7 +269,8 @@ defmodule CoursePlannerWeb.Coherence.SessionController do
       |> cred_store.delete_credentials
       {changeset, new_token} = schema(Rememberable).update_login(rememberable)
 
-      cred_store.put_credentials({gen_cookie(id, series, new_token), Config.user_schema(), Config.schema_key()})
+      cred_store.put_credentials({gen_cookie(id, series, new_token),
+                                  Config.user_schema(), Config.schema_key()})
 
       Config.repo.update! changeset
 
@@ -329,8 +332,6 @@ defmodule CoursePlannerWeb.Coherence.SessionController do
     hash_token = hash token
     repo = Config.repo()
 
-    # TODO: move this to the RememberableServer. But first, we need to change the
-    #       logic below to ignore expired tokens
     delete_expired_tokens!(repo)
 
     with :ok <- get_invalid_login!(repo, user_id, hash_series, hash_token),

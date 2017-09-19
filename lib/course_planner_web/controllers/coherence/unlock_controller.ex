@@ -53,12 +53,18 @@ defmodule CoursePlannerWeb.Coherence.UnlockController do
         {:ok, user} ->
           if user_schema.locked?(user) do
             if Config.mailer?() do
-              send_user_email :unlock, user, router_helpers().unlock_url(conn, :edit, user.unlock_token)
-              put_flash(conn, :info, Messages.backend().unlock_instructions_sent())
+              send_user_email :unlock, user,
+                router_helpers().unlock_url(conn, :edit, user.unlock_token)
+
+              conn
+              |> put_flash(:info, Messages.backend().unlock_instructions_sent())
+              |> redirect_to(:unlock_create, params)
             else
-              put_flash(conn, :error, Messages.backend().mailer_required())
+              conn
+              |> put_flash(:error, Messages.backend().mailer_required())
+              |> redirect_to(:unlock_create, params)
             end
-            |> redirect_to(:unlock_create, params)
+
           else
             conn
             |> put_flash(:error, Messages.backend().your_account_is_not_locked())
